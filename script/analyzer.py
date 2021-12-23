@@ -6,7 +6,8 @@ import imagehash
 
 data_source = set()
 path = "Japeal"
-
+previous_filehash = None
+previous_name = None
 
 def add_element(element):
     data_source.add(element)
@@ -33,7 +34,7 @@ def hash(filename):
 print(" ")
 print("> START\n")
 with open("fusions.txt", "w") as fusions:
-    with open("duplicates.txt", "w") as duplicates:
+    with open("duplicates2.txt", "w") as duplicates:
         for root, dirs, files in walk(path):
             for name in files:
                 if name.endswith((".png")):
@@ -41,10 +42,13 @@ with open("fusions.txt", "w") as fusions:
                     filehash = str(hash(filename))
                     fusions.write(name + " " + filehash + "\n")
                     if is_fusion(name):
-                        if is_duplicate(filehash):
-                            print(name)
-                            duplicates.write(name + " " + filehash + "\n")
+                        if is_duplicate(filehash) and previous_filehash == filehash:
+                            print(name, previous_name, filehash)
+                            duplicates.write(f"{name} {previous_name} {filehash}\n")
                         else:
+                            # print(name)
                             add_element(filehash)
+                        previous_name = name
+                        previous_filehash = filehash
 print("\n> END")
 
