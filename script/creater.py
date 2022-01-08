@@ -85,6 +85,7 @@ class_selected = "selected"
 
 def create_driver():
     driver = get_driver()
+    print(" ")
     driver.set_window_position(61, 1)
     driver.set_window_size(744, 800)
     driver.get(fakemon_url)
@@ -165,6 +166,7 @@ def fix_rotom_cancer():
     element_size.send_keys("-22")
     time.sleep(1)
 
+    """
     print("clicking on left hand")
     element_fakemon_left_hand = get_element_by_id(driver, id_fakemon_left_hand)
     element_fakemon_left_hand.click()
@@ -175,9 +177,7 @@ def fix_rotom_cancer():
     clear_element(element_position_x)
     element_position_x.send_keys("-5")
     time.sleep(1)
-    
-
-    # -5 for the X ???
+    """
 
 
 def create_fusion(driver, head, body):
@@ -187,8 +187,6 @@ def create_fusion(driver, head, body):
     print("done lol")
 
 
-
-print(" ")
 
 head = "Heracross"
 body = "Rotom"
