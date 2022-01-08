@@ -3,6 +3,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -24,7 +25,7 @@ def get_driver():
     return webdriver.Firefox(executable_path=r'C:/Selenium/geckodriver.exe', options=options)
 
 
-def get_element_by_id(driver, id_element) -> WebElement:
+def get_element_by_id(driver:WebDriver, id_element:str) -> WebElement:
     element = None
     locator = (By.ID, id_element)
     try:
@@ -33,8 +34,16 @@ def get_element_by_id(driver, id_element) -> WebElement:
         print(f"[get_element_by_id] Failed to get {id_element}")
     return element
 
+def get_element_by_xpath(driver:WebDriver, xpath_element:str) -> WebElement:
+    element = None
+    locator = (By.XPATH, xpath_element)
+    try:
+        element = WebDriverWait(driver, driver_delay).until(EC.presence_of_element_located(locator))
+    except TimeoutException:
+        print(f"[get_element_by_id] Failed to get {xpath_element}")
+    return element
 
-def get_element_by_class(driver, class_element, is_loud=True) -> WebElement:
+def get_element_by_class(driver:WebDriver, class_element:str, is_loud=True) -> WebElement:
     element = None
     locator = (By.CLASS_NAME, class_element)
     try:
@@ -46,7 +55,7 @@ def get_element_by_class(driver, class_element, is_loud=True) -> WebElement:
 
 
 # sometimes appear, sometimes doesn't
-def accept_all_cookies(driver):
+def accept_all_cookies(driver:WebDriver):
     class_accept = "cc-accept-all"
     try:
         element_accept = get_element_by_class(driver, class_accept, is_loud=False)
@@ -57,11 +66,15 @@ def accept_all_cookies(driver):
         print("accepting all cookies")
         time.sleep(1)
 
+def clear_background(driver:WebDriver):
+    xpath_background = "/html/body/div[1]/div/div[5]/div[4]/div/div/main/div[4]/style[2]"
+    script = "function getElementByXpath(path){return document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;};"
+    script += f"getElementByXpath('{xpath_background}').innerHTML='';"
+    driver.execute_script(script)   
 
 def clear_element(element:WebElement):
     element.send_keys(Keys.CONTROL + "a")
     element.send_keys(Keys.DELETE)
-
 
 
 
@@ -86,19 +99,20 @@ class_selected = "selected"
 def create_driver():
     driver = get_driver()
     print(" ")
-    driver.set_window_position(61, 1)
-    driver.set_window_size(744, 800)
+    driver.set_window_position(60, 1)
+    driver.set_window_size(744, 866)
     driver.get(fakemon_url)
     return driver
 
 
-def init_website(driver):
+def init_website(driver:WebDriver):
     print("waiting for the default portrait to load")
     time.sleep(5)
     accept_all_cookies(driver)
+    clear_background(driver)
 
 
-def handle_body(driver, body):
+def handle_body(driver:WebDriver, body:str):
     print("clicking on pokemon portrait")
     element_pokemon_selector = get_element_by_id(driver, id_pokemon_selector)
     element_pokemon_selector.click()
@@ -121,7 +135,7 @@ def handle_body(driver, body):
     time.sleep(1)
 
 
-def handle_head(driver, head):
+def handle_head(driver:WebDriver, head:str):
     print("clicking on pokemon portrait")
     element_pokemon_selector = get_element_by_id(driver, id_pokemon_selector)
     element_pokemon_selector.click()
@@ -166,7 +180,12 @@ def fix_rotom_cancer():
     element_size.send_keys("-22")
     time.sleep(1)
 
-    """
+    print("changing the position of the arm")
+    element_position_x = get_element_by_id(driver, id_position_x)
+    clear_element(element_position_x)
+    element_position_x.send_keys("10")
+    time.sleep(1)
+
     print("clicking on left hand")
     element_fakemon_left_hand = get_element_by_id(driver, id_fakemon_left_hand)
     element_fakemon_left_hand.click()
@@ -175,12 +194,11 @@ def fix_rotom_cancer():
     print("changing the position of the arm")
     element_position_x = get_element_by_id(driver, id_position_x)
     clear_element(element_position_x)
-    element_position_x.send_keys("-5")
+    element_position_x.send_keys("-10")
     time.sleep(1)
-    """
 
 
-def create_fusion(driver, head, body):
+def create_fusion(driver:WebDriver, head:str, body:str):
     handle_body(driver, body)
     handle_head(driver, head)
     fix_rotom_cancer()
@@ -188,12 +206,12 @@ def create_fusion(driver, head, body):
 
 
 
-head = "Heracross"
+head = "Metang"
 body = "Rotom"
 
 driver = create_driver()
 init_website(driver)
-create_fusion(driver, head, body)
+# create_fusion(driver, head, body)
 
 
 
