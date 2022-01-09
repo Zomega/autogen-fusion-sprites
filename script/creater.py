@@ -68,11 +68,17 @@ def accept_all_cookies(driver:WebDriver):
         time.sleep(1)
 
 def clear_background(driver:WebDriver):
-    xpath_background = "/html/body/div[1]/div/div[5]/div[4]/div/div/main/div[4]/style[2]"
+    # Sometimes it doesn't work, bruh
     script = ""
+    script += "var xpath = '/html/body/div[1]/div/div[5]/div[4]/div/div/main/div[4]/style[2]';"
     script += "function getElementByXpath(path) {return document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;};"
-    script += f"getElementByXpath('{xpath_background}').innerHTML='';"
-    driver.execute_script(script)   
+    script += "var element = getElementByXpath(xpath);"
+    script += "element.innerHTML='';"
+    try:
+        driver.execute_script(script)
+    except:
+        driver.close()
+        exit()
 
 def clear_element(element:WebElement):
     element.send_keys(Keys.CONTROL + "a")
@@ -113,9 +119,9 @@ def create_driver():
 def init_website(driver:WebDriver):
     # print("waiting for the default portrait to load")
     time.sleep(5)
+    clear_background(driver)
     adapt_zoom(driver)
     accept_all_cookies(driver)
-    clear_background(driver)
 
 
 def handle_body(driver:WebDriver, body:str):
@@ -149,6 +155,7 @@ def handle_head(driver:WebDriver, head:str):
 
     # print("writing pokemon name (head)")
     element_textbox = get_element_by_id(driver, id_textbox)
+    # CRASHED HERE ONCE ALREADY, PERHAPS MORE DELAY COULD HELP
     clear_element(element_textbox)
     element_textbox.send_keys(head)
     time.sleep(1)
@@ -211,19 +218,20 @@ def create_fusion(driver:WebDriver, head:str, body:str):
 
 
 head_list = []
-head_list.append("Electabuzz")
-head_list.append("Magmar")
-head_list.append("Mewtwo")
-head_list.append("Typhlosion")
-head_list.append("Ledyba")
-head_list.append("Ledian")
-head_list.append("Ariados")
+# head_list.append("Electabuzz")
+#head_list.append("Magmar")
+# head_list.append("Mewtwo")
+#head_list.append("Typhlosion")
+#head_list.append("Ledyba")
+# head_list.append("Ledian")
+# head_list.append("Ariados")
+"""
 head_list.append("Lanturn")
 head_list.append("Ampharos")
 head_list.append("Azumarill")
 head_list.append("Sudowoodo")
 head_list.append("Politoed")
-
+"""
 
 body = "Rotom"
 
@@ -231,11 +239,9 @@ body = "Rotom"
 driver = create_driver()
 print("START")
 init_website(driver)
-
 for head in head_list:
     filename = f"{head}-{body}.png"
     create_fusion(driver, head, body)
     print(filename, driver.save_screenshot(f"new_rotom/{filename}"))
-
-driver.close()
+# driver.close()
 print("END")
