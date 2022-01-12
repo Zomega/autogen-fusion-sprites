@@ -1,6 +1,4 @@
-
-
-from selenium import webdriver
+from selenium.webdriver import Firefox as firefox
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.webdriver import WebDriver
@@ -9,7 +7,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
-
 import time
 
 
@@ -21,18 +18,34 @@ is_loud = True
 have_cookies = None
 xpath_with_cookies    = "/html/body/div[3]/div/div[5]/div[4]/div/div/main/div[4]/style[2]" 
 xpath_without_cookies = "/html/body/div[1]/div/div[5]/div[4]/div/div/main/div[4]/style[2]"
+bg_color_selected = "rgba(251, 255, 0, 0.55)"
+
+id_pokemon_selector = "Limagediv2"
+id_textbox = "msdropdown20_titleText"
+id_body = "pbox_body"
+id_color = "pbox_color"
+id_head = "pbox_head"
+id_hand = "pbox_LH"
+id_wings = "pbox_W"
+id_tail = "pbox_T"
+id_fakemon_right_hand = "bbox_RH"
+id_fakemon_left_hand  = "bbox_LH"
+id_fakemon_wings  = "bbox_W"
+id_fakemon_tail  = "bbox_T"
+id_size = "numberSize"
+id_position_x = "numberX"
+id_remove = "removebtn"
+class_selected = "selected"
 
 
 def log(message:str):
     if is_loud:
         print(message)
 
-
 def get_driver():
     options = Options()
     options.binary_location = r"C:/Program Files/Mozilla Firefox/firefox.exe"
-    return webdriver.Firefox(executable_path=r'C:/Selenium/geckodriver.exe', options=options)
-
+    return firefox(executable_path=r'C:/Selenium/geckodriver.exe', options=options)
 
 def get_element_by_id(driver:WebDriver, id_element:str) -> WebElement:
     element = None
@@ -61,7 +74,6 @@ def get_element_by_class(driver:WebDriver, class_element:str, is_loud=True) -> W
         if is_loud:
             print(f"[find_element_by_class] Failed to get {class_element}")
     return element
-
 
 # sometimes appear, sometimes doesn't
 def accept_all_cookies(driver:WebDriver):
@@ -95,8 +107,11 @@ def clear_background(driver:WebDriver):
         exit()
 
 def clear_element(element:WebElement):
+    time.sleep(2)
     element.send_keys(Keys.CONTROL + "a")
+    time.sleep(2)
     element.send_keys(Keys.DELETE)
+    time.sleep(2)
 
 def adapt_zoom(driver:WebDriver):
     # Creates non-blurry sprites with 3x3 pixels
@@ -104,27 +119,13 @@ def adapt_zoom(driver:WebDriver):
     driver.execute_script('document.body.style.MozTransform = "scale(0.80)";')
     driver.execute_script('document.body.style.MozTransformOrigin = "0 0";')
 
+def select_fakemon_tail(driver:WebDriver):
+    script = 'selectPartFun("T")'
+    driver.execute_script(script)
 
-id_pokemon_selector = "Limagediv2"
-id_textbox = "msdropdown20_titleText"
-id_body = "pbox_body"
-id_color = "pbox_color"
-id_head = "pbox_head"
-id_hand = "pbox_LH"
-id_tail = "pbox_T"
-id_fakemon_right_hand = "bbox_RH"
-id_fakemon_left_hand  = "bbox_LH"
-id_fakemon_tail  = "bbox_T"
-id_fakemon_tail_icon = "bbox_img_T"
-id_size = "numberSize"
-id_position_x = "numberX"
-id_remove = "removebtn"
-class_selected = "selected"
-
-
-default_tail_url = 'url("https://japeal.com/wordpress/wp-content/themes/total/PKM/imagefiles/SplitParts/Gen1_Originals_1.png")'
-default_width = "70px"
-
+def select_fakemon_wings(driver:WebDriver):
+    script = 'selectPartFun("W")'
+    driver.execute_script(script)
 
 def create_driver():
     driver = get_driver()
@@ -134,7 +135,6 @@ def create_driver():
     driver.get(fakemon_url)
     return driver
 
-
 def init_website(driver:WebDriver):
     log("waiting for the default portrait to load")
     time.sleep(driver_delay)
@@ -143,148 +143,162 @@ def init_website(driver:WebDriver):
     clear_background(driver)
     log(" ")
 
+def update_tail(driver:WebDriver):
+    log("checking previous tail")
+    select_fakemon_tail(driver)
+    time.sleep(basic_delay)
+    element = get_element_by_id(driver, id_fakemon_tail)
+    element_bg_color = element.value_of_css_property("background-color")
+
+    if element_bg_color == bg_color_selected:
+        log("removing previous tail")
+        time.sleep(basic_delay)
+        element = get_element_by_id(driver, id_remove)
+        element.click()
+    else:
+        log("no need to remove previous tail")
+
+    log("selecting new tail")
+    time.sleep(basic_delay)
+    element = get_element_by_id(driver, id_tail)
+    element.click()
+
+def update_wings(driver:WebDriver):
+    log("checking previous wings")
+    select_fakemon_wings(driver)
+    time.sleep(basic_delay)
+    element = get_element_by_id(driver, id_fakemon_wings)
+    element_bg_color = element.value_of_css_property("background-color")
+
+    if element_bg_color == bg_color_selected:
+        log("removing previous wings")
+        time.sleep(basic_delay)
+        element = get_element_by_id(driver, id_remove)
+        element.click()
+    else:
+        log("no need to remove previous wings")
+
+    log("selecting new wings")
+    time.sleep(basic_delay)
+    element = get_element_by_id(driver, id_wings)
+    element.click()
 
 def handle_body(driver:WebDriver, body:str):
     log("clicking on pokemon portrait")
-    element_pokemon_selector = get_element_by_id(driver, id_pokemon_selector)
-    element_pokemon_selector.click()
     time.sleep(basic_delay)
+    element = get_element_by_id(driver, id_pokemon_selector)
+    element.click()
 
     log(f"writing pokemon name ({body})")
-    element_textbox = get_element_by_id(driver, id_textbox)
-    clear_element(element_textbox)
-    element_textbox.send_keys(body)
     time.sleep(basic_delay)
+    element = get_element_by_id(driver, id_textbox)
+    clear_element(element)
+    element.send_keys(body)
 
-    log("selecting the best choice")
-    element_selected = get_element_by_class(driver, class_selected)
-    element_selected.click()
+    log("picking the best choice")
     time.sleep(basic_delay)
-
-    log("using new body")
-    element_selected = get_element_by_id(driver, id_body)
-    element_selected.click()
+    element = get_element_by_class(driver, class_selected)
+    element.click()
+    
+    log("selecting new body")
     time.sleep(basic_delay)
-
+    element = get_element_by_id(driver, id_body)
+    element.click()
 
 def handle_head(driver:WebDriver, head:str):
     log("clicking on pokemon portrait")
+    time.sleep(basic_delay)
     element = get_element_by_id(driver, id_pokemon_selector)
     element.click()
-    time.sleep(basic_delay)
-
+    
     log(f"writing pokemon name ({head})")
+    time.sleep(basic_delay)
     element = get_element_by_id(driver, id_textbox)
-    # CRASHED HERE ONCE ALREADY, PERHAPS MORE DELAY COULD HELP
     clear_element(element)
     element.send_keys(head)
-    time.sleep(basic_delay)
 
-    log("selecting the best choice")
+    log("picking the best choice")
+    time.sleep(basic_delay)
     element = get_element_by_class(driver, class_selected)
     element.click()
-    time.sleep(basic_delay)
 
-    log("using new color")
+    log("selecting new color")
+    time.sleep(basic_delay)
     element = get_element_by_id(driver, id_color)
     element.click()
-    time.sleep(basic_delay)
 
-    log("using new head")
+    log("selecting new face")
+    time.sleep(basic_delay)
     element = get_element_by_id(driver, id_head)
     element.click()
-    time.sleep(basic_delay)
 
-    log("using new hands")
+    log("selecting new hands") # this will cause the old icon to appear
+    time.sleep(basic_delay)
     element = get_element_by_id(driver, id_hand)
     element.click()
-    time.sleep(basic_delay)
 
+    update_tail(driver)
 
-    # checking if there is a tail, from the previous fusion
-    element = get_element_by_id(driver, id_fakemon_tail_icon)
-    element_width = element.value_of_css_property("width")
-    element_bg = element.value_of_css_property("background-image")
-
-    if element_width == default_width and element_bg != default_tail_url:
-        log("selecting previous tail")
-        element = get_element_by_id(driver, id_fakemon_tail)
-        element.click()
-        time.sleep(basic_delay)
-        
-        log("removing previous tail")
-        element = get_element_by_id(driver, id_remove)
-        element.click()
-        time.sleep(basic_delay)
-
-    log("using new tail")
-    element = get_element_by_id(driver, id_tail)
-    element.click()
-    time.sleep(basic_delay)
+    update_wings(driver)
     
-
 def fix_rotom_cancer():
-    log("using new right hand")
+    log("clicking on new right hand")
+    time.sleep(basic_delay)
     element = get_element_by_id(driver, id_fakemon_right_hand)
     element.click()
-    time.sleep(basic_delay)
 
-    log("changing the size of the arm")
+    log("changing the size")
+    time.sleep(basic_delay)
     element = get_element_by_id(driver, id_size)
-    # CRASHED HERE ONCE ALREADY, PERHAPS MORE DELAY COULD HELP
     clear_element(element)
     element.send_keys("-22")
-    time.sleep(basic_delay)
 
-    log("changing the position of the arm")
+    log("changing the position")
+    time.sleep(basic_delay)
     element = get_element_by_id(driver, id_position_x)
     clear_element(element)
     element.send_keys("30")
-    time.sleep(basic_delay)
 
-    log("using new left hand")
+    log("clicking on new left hand")
+    time.sleep(basic_delay)
     element = get_element_by_id(driver, id_fakemon_left_hand)
     element.click()
-    time.sleep(basic_delay)
 
-    log("changing the position of the arm")
+    log("changing the position")
+    time.sleep(basic_delay)
     element = get_element_by_id(driver, id_position_x)
     clear_element(element)
     element.send_keys("-30")
-    time.sleep(basic_delay)
-
 
 def create_fusion(driver:WebDriver, head:str, body:str):
     handle_body(driver, body)
     handle_head(driver, head)
     fix_rotom_cancer()
 
-# head_list.append("Scizor")
-head_list = []
-head_list.append("Rhyperior") # have tail
-head_list.append("Politoed") # have no tail
-head_list.append("Magmortar") # tail-hand issue
-
-# head_list.append("Wobbuffet")
-# head_list.append("Weavile")
-# head_list.append("Magby")
-# head_list.append("Hitmontop")
-# head_list.append("Elekid")
-# head_list.append("Electivire")
-# head_list.append("Delibird")
-# head_list.append("Blaziken")
-# head_list.append("Ambipom")
-
 
 body = "Rotom"
 
+head_list = []
+head_list.append("Scizor")
+head_list.append("Rhyperior")
+head_list.append("Politoed")
+head_list.append("Magmortar")
+head_list.append("Wobbuffet")
+head_list.append("Weavile")
+head_list.append("Magby")
+head_list.append("Hitmontop")
+head_list.append("Elekid")
+head_list.append("Electivire")
+head_list.append("Delibird")
+head_list.append("Blaziken")
+head_list.append("Ambipom")
 
 driver = create_driver()
 print("START")
 init_website(driver)
 for head in head_list:
     filename = f"{head}-{body}.png"
-    print(filename)
+    print(f"[[ {filename} ]]")
     create_fusion(driver, head, body)
     print(driver.save_screenshot(f"new_rotom/{filename}"))
     print(" ")
